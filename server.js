@@ -204,6 +204,9 @@ app.post('/webhook', async (req, res) => {
     const body = req.body;
     const event = body.event_name;
 
+    console.log('RAW BODY:', JSON.stringify(body));
+console.log('EVENT:', event);
+if (event !== 'user_send_text') return;
     // Chỉ xử lý tin nhắn text
     if (event !== 'user_send_text') return;
 
