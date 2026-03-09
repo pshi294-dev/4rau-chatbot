@@ -1,5 +1,4 @@
 const express = require('express');
-const crypto = require('crypto');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const axios = require('axios');
 
@@ -67,7 +66,6 @@ async function getKnowledgeBase() {
   try {
     let kb = '';
 
-    // Đọc FAQ
     if (CONFIG.SHEETS_CSV_FAQ) {
       const faqRes = await axios.get(CONFIG.SHEETS_CSV_FAQ, { timeout: 5000 });
       const rows = parseCSV(faqRes.data);
@@ -80,7 +78,6 @@ async function getKnowledgeBase() {
       }
     }
 
-    // Đọc Dịch vụ & Giá
     if (CONFIG.SHEETS_CSV_SERVICES) {
       const svcRes = await axios.get(CONFIG.SHEETS_CSV_SERVICES, { timeout: 5000 });
       const rows = parseCSV(svcRes.data);
@@ -161,9 +158,9 @@ XỬ LÝ TÌNH HUỐNG:
 - Không rõ ý → hỏi lại lịch sự`;
 
 async function askGemini(userMessage, knowledgeBase) {
-  const model = genAI.getGenerativeModel({ 
+  const model = genAI.getGenerativeModel({
     model: 'gemini-1.5-flash',
-    systemInstruction: knowledgeBase 
+    systemInstruction: knowledgeBase
       ? `${SYSTEM_PROMPT}\n\n=== KNOWLEDGE BASE ===\n${knowledgeBase}`
       : SYSTEM_PROMPT,
   });
@@ -196,7 +193,6 @@ async function sendZaloMessage(userId, text) {
 
 // ==================== WEBHOOK ====================
 app.post('/webhook', async (req, res) => {
-  // Trả về 200 ngay để Zalo không retry
   res.status(200).json({ status: 'ok' });
 
   try {
@@ -204,9 +200,8 @@ app.post('/webhook', async (req, res) => {
     const event = body.event_name;
 
     console.log('RAW BODY:', JSON.stringify(body));
-console.log('EVENT:', event);
-if (event !== 'user_send_text') return;
-    // Chỉ xử lý tin nhắn text
+    console.log('EVENT:', event);
+
     if (event !== 'user_send_text') return;
 
     const userId = body.sender?.id;
@@ -216,27 +211,20 @@ if (event !== 'user_send_text') return;
 
     console.log(`[${userId}] ${userMessage}`);
 
-    // Lấy knowledge base
     const kb = await getKnowledgeBase();
-
-    // Gọi Gemini
     const reply = await askGemini(userMessage, kb);
 
-    // Gửi reply về Zalo
     await sendZaloMessage(userId, reply);
-
     console.log(`[Reply] ${reply.substring(0, 100)}...`);
   } catch (err) {
     console.error('Webhook error:', err.message);
   }
 });
 
-// Zalo verify webhook
 app.get('/webhook', (req, res) => {
   res.status(200).send('OK');
 });
 
-// Health check (UptimeRobot ping vào đây)
 app.get('/ping', (req, res) => {
   res.json({ status: 'alive', time: new Date().toISOString() });
 });
