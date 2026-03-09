@@ -161,19 +161,18 @@ XỬ LÝ TÌNH HUỐNG:
 - Không rõ ý → hỏi lại lịch sự`;
 
 async function askGemini(userMessage, knowledgeBase) {
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
-  const fullPrompt = knowledgeBase
-    ? `${SYSTEM_PROMPT}\n\n=== THÔNG TIN CẬP NHẬT TỪ KNOWLEDGE BASE ===\n${knowledgeBase}\n\n=== KẾT THÚC KNOWLEDGE BASE ===`
-    : SYSTEM_PROMPT;
-
-  const chat = model.startChat({
-    history: [],
-    generationConfig: { maxOutputTokens: 500, temperature: 0.7 },
-    systemInstruction: fullPrompt,
+  const model = genAI.getGenerativeModel({ 
+    model: 'gemini-1.5-flash',
+    systemInstruction: knowledgeBase 
+      ? `${SYSTEM_PROMPT}\n\n=== KNOWLEDGE BASE ===\n${knowledgeBase}`
+      : SYSTEM_PROMPT,
   });
 
-  const result = await chat.sendMessage(userMessage);
+  const result = await model.generateContent({
+    contents: [{ role: 'user', parts: [{ text: userMessage }] }],
+    generationConfig: { maxOutputTokens: 500, temperature: 0.7 },
+  });
+
   return result.response.text();
 }
 
