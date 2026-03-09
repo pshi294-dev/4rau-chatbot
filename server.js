@@ -159,7 +159,7 @@ XỬ LÝ TÌNH HUỐNG:
 
 async function askGemini(userMessage, knowledgeBase) {
   const model = genAI.getGenerativeModel({
-    model: 'gemini-1.5-flash-latest',
+    model: 'gemini-1.5-flash',
     systemInstruction: knowledgeBase
       ? `${SYSTEM_PROMPT}\n\n=== KNOWLEDGE BASE ===\n${knowledgeBase}`
       : SYSTEM_PROMPT,
